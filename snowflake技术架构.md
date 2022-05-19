@@ -30,7 +30,7 @@ Snowflake 支持各种标准接口 (JDBC/ODBC/Python) 与第三方工具 (Tablea
 
 ## Snowflake 架构
 
-<img src="/Users/didi/Library/Application Support/typora-user-images/image-20211113171919878.png" alt="image-20211113171919878" style="zoom:50%;" />
+<img src="images/image-20211113171919878.png" alt="image-20211113171919878" style="zoom:50%;" />
 
 这是官方论文中的架构图，产品架构分为三层，底层是数据存储层，基于公有云的 S3 实现；中间是计算层，以虚拟仓库（Virtual Warehouse）为单位，不同规格对应不同数量的 EC2 实例；上层是云服务层，面向用户的纯 SaaS 服务，包含各种管控、安全、SQL 解析与优化、元数据存储等。
 
@@ -80,34 +80,34 @@ Snowflake 的查询并不支持传统的索引，主要是因为 S3 不支持随
 
 官网视频有个简单的例子，可以看看数据建设者和数据分析者如何使用 Snowflake。
 
-![image-20211120174107246](/Users/didi/Library/Application Support/typora-user-images/image-20211120174107246.png)
+![image-20211120174107246](images/image-20211120174107246.png)
 
 数据建设者创建一个 VW，只需要命名、选择规格、设定自动挂起的时间即可，一键部署集群。
 
-![image-20211120174210495](/Users/didi/Library/Application Support/typora-user-images/image-20211120174210495.png)
+![image-20211120174210495](images/image-20211120174210495.png)
 
 导入结构化数据，从本地 CSV 文件上传，通过建表语句和一个 copy 语句建表和导入数据。在导入过程中自动完成分区和 min-max裁剪信息的收集。
 
-![image-20211120174256813](/Users/didi/Library/Application Support/typora-user-images/image-20211120174256813.png)
+![image-20211120174256813](images/image-20211120174256813.png)
 
 数据分析者也创建一个 VW，和建设者的 VW 互相隔离，但共享存储。
 
-![image-20211120174334205](/Users/didi/Library/Application Support/typora-user-images/image-20211120174334205.png)
+![image-20211120174334205](images/image-20211120174334205.png)
 
 分析者通过标准 SQL 查询表中的数据，在分析过程中发现数据不够丰富，需要建设者补充一些数据。
 
-![image-20211120174512676](/Users/didi/Library/Application Support/typora-user-images/image-20211120174512676.png)
+![image-20211120174512676](images/image-20211120174512676.png)
 
 新的数据为 json 格式，同样可以支持导入，并把 json 数据存在 VARIANT 类型中。
 
-![image-20211120174603158](/Users/didi/Library/Application Support/typora-user-images/image-20211120174603158.png)
+![image-20211120174603158](images/image-20211120174603158.png)
 
 分析者继续分析，不同的是查询半结构化数据时可以通过 WEATHER_SUMMARY.TYPE 的写法访问到 json 格式内层的数据，类似 JSON path。
 
-![image-20211120174719643](/Users/didi/Library/Application Support/typora-user-images/image-20211120174719643.png)
+![image-20211120174719643](images/image-20211120174719643.png)
 
 使用结束后，可以看到相关表的统计信息，存储量、行数等。
 
-![image-20211120174755525](/Users/didi/Library/Application Support/typora-user-images/image-20211120174755525.png)
+![image-20211120174755525](images/image-20211120174755525.png)
 
 图中可以看到，如果使用 drop 语句误删了某个表，还可以通过 undrop 语句恢复回来。当删除掉表中的一些数据后，还可以指定时间戳，来基于历史快照创建一个删除之前的新表，非常方便。
