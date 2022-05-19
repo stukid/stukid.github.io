@@ -6,7 +6,7 @@ Snowflake 是当下云原生领域的明星公司，主打 100% 云原生的数�
 
 目前 Snowflake 的客户数接近 5000 家，其中世界 500 强的客户达到 212 家。
 
-##Snowflake 优势
+## Snowflake 优势
 
 ### 技术前瞻
 
@@ -14,7 +14,7 @@ Snowflake 是当下云原生领域的明星公司，主打 100% 云原生的数�
 
 2012 年公司创立时，正是 SQL on Hadoop 最火的时候，但当时他们已选定了存算分离，依托于公有云研发SaaS 产品的模式。纯 SaaS 的模式对用户屏蔽了底层细节，不仅方便用户使用，在内部产品迭代时也方便开发测试，无缝升级。
 
-###计费方式
+### 计费方式
 
 与云下采购服务器和堆技术团队不同，Snowflake 在云上真正实现了按用量付费，依据用户使用的计算资源规格和时间来计费，假如 1 单位的计算资源需要计算 4 小时，4 单位的计算资源需要计算 1 小时，用户等待时间非常不同，但价格相同，那用户自然更愿意选择后者，这在云下是很难做到的。
 
@@ -30,7 +30,7 @@ Snowflake 支持各种标准接口 (JDBC/ODBC/Python) 与第三方工具 (Tablea
 
 ## Snowflake 架构
 
-<img src="/Users/didi/Library/Application Support/typora-user-images/image-20211113171919878.png" alt="image-20211113171919878" style="zoom:50%;" />
+<img src="images/image-20211113171919878.png" alt="image-20211113171919878" style="zoom:50%;" />
 
 这是官方论文中的架构图，产品架构分为三层，底层是数据存储层，基于公有云的 S3 实现；中间是计算层，以虚拟仓库（Virtual Warehouse）为单位，不同规格对应不同数量的 EC2 实例；上层是云服务层，面向用户的纯 SaaS 服务，包含各种管控、安全、SQL 解析与优化、元数据存储等。
 
@@ -54,7 +54,7 @@ Snowflake 存储共享，计算独立，同一份存储上可以对应多个VW�
 
 Snowflake 自研的计算引擎中，也用到了列存、向量化计算、结果下推等主流的优化方法。
 
-###云服务
+### 云服务
 
 由于这部分负载并不高，云服务层的资源是多租户共用的，只有逻辑隔离。其中的每个服务都支持高可用，任意一个节点故障都不会导致数据丢失或不可用，只可能导致部分查询失败（可自动重试）。
 
@@ -64,7 +64,7 @@ Snowflake 主要针对分析型场景设计，支持大量读、批量或少量�
 
 Snowflake 的查询并不支持传统的索引，主要是因为 S3 不支持随机读写，而且索引会增加存储量和加载时间，同时用户需要维护，成本较高。所以他们采用的是 min-max 裁剪，每个文件都在文件头中记录了这个文件的最大最小值，这样可以快速跳过不满足过滤条件的文件，而且无需维护，占用空间也小，适合顺序访问。裁剪还支持半结构化数据和表达式。
 
-###更多特性
+### 更多特性
 
 持续高可用，能够容忍任何单节点的故障。Snowflake 的元数据也随着 S3 的架构跨 AZ 多副本存储，单节点故障对用户影响不大。云服务的其他无状态组件也是跨 AZ的，通过 load balancer 把用户请求分发到不同 AZ 的实例上。与此不同的是，VW 并不跨 AZ，主要是出于网络延迟和带宽会影响性能的考虑，如果有节点故障影响了查询，会自动重试。为了尽量减少重试的影响，snowflake 也维护了一个备用节点池，可以直接替换，节省掉节点启动的开销。如果整个 AZ 挂掉，则需要用户主动在其他 AZ 重建一个 VW，由于概率极低，认为是可接受的。
 
@@ -76,38 +76,38 @@ Snowflake 的查询并不支持传统的索引，主要是因为 S3 不支持随
 
 安全方面也做了很多工作，不细展开。
 
-##使用示例
+## 使用示例
 
 官网视频有个简单的例子，可以看看数据建设者和数据分析者如何使用 Snowflake。
 
-![image-20211120174107246](/Users/didi/Library/Application Support/typora-user-images/image-20211120174107246.png)
+![image-20211120174107246](images/image-20211120174107246.png)
 
 数据建设者创建一个 VW，只需要命名、选择规格、设定自动挂起的时间即可，一键部署集群。
 
-![image-20211120174210495](/Users/didi/Library/Application Support/typora-user-images/image-20211120174210495.png)
+![image-20211120174210495](images/image-20211120174210495.png)
 
 导入结构化数据，从本地 CSV 文件上传，通过建表语句和一个 copy 语句建表和导入数据。在导入过程中自动完成分区和 min-max裁剪信息的收集。
 
-![image-20211120174256813](/Users/didi/Library/Application Support/typora-user-images/image-20211120174256813.png)
+![image-20211120174256813](images/image-20211120174256813.png)
 
 数据分析者也创建一个 VW，和建设者的 VW 互相隔离，但共享存储。
 
-![image-20211120174334205](/Users/didi/Library/Application Support/typora-user-images/image-20211120174334205.png)
+![image-20211120174334205](images/image-20211120174334205.png)
 
 分析者通过标准 SQL 查询表中的数据，在分析过程中发现数据不够丰富，需要建设者补充一些数据。
 
-![image-20211120174512676](/Users/didi/Library/Application Support/typora-user-images/image-20211120174512676.png)
+![image-20211120174512676](images/image-20211120174512676.png)
 
 新的数据为 json 格式，同样可以支持导入，并把 json 数据存在 VARIANT 类型中。
 
-![image-20211120174603158](/Users/didi/Library/Application Support/typora-user-images/image-20211120174603158.png)
+![image-20211120174603158](images/image-20211120174603158.png)
 
 分析者继续分析，不同的是查询半结构化数据时可以通过 WEATHER_SUMMARY.TYPE 的写法访问到 json 格式内层的数据，类似 JSON path。
 
-![image-20211120174719643](/Users/didi/Library/Application Support/typora-user-images/image-20211120174719643.png)
+![image-20211120174719643](images/image-20211120174719643.png)
 
 使用结束后，可以看到相关表的统计信息，存储量、行数等。
 
-![image-20211120174755525](/Users/didi/Library/Application Support/typora-user-images/image-20211120174755525.png)
+![image-20211120174755525](images/image-20211120174755525.png)
 
 图中可以看到，如果使用 drop 语句误删了某个表，还可以通过 undrop 语句恢复回来。当删除掉表中的一些数据后，还可以指定时间戳，来基于历史快照创建一个删除之前的新表，非常方便。
